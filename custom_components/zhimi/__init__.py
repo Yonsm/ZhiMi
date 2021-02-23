@@ -1,26 +1,23 @@
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from .micom.miauth import MiAuth
-from .micom.miiocom import MiIOCom
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-import logging
-_LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['miservice']
 
 DOMAIN = 'zhimi'
 
-_miauth = None
-_miiocom = None
+_mi_account = None
+_miio_service = None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config):
     conf = config.get(DOMAIN)
-    global _miauth, _miiocom
-    # TODO: new aiohttp session?
-    # TODO: Use session context?
-    _miauth = MiAuth(async_get_clientsession(hass), conf['username'], conf['password'], hass.config.path(STORAGE_DIR, DOMAIN))
-    _miiocom = MiIOCom(_miauth, conf.get('region'))
+    global _mi_account, _miio_service
+    from miservice import MiAccount, MiIOService
+    _mi_account = MiAccount(async_get_clientsession(hass), conf['username'], conf['password'], hass.config.path(STORAGE_DIR, DOMAIN))
+    _miio_service = MiIOService(_mi_account, conf.get('region'))
     return True
 
 
-def get_miiocom():
-    return _miiocom
+def get_miio_service():
+    return _miio_service
