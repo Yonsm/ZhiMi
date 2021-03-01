@@ -2,7 +2,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['miservice']
+REQUIREMENTS = ['miservice>=2021.3.1']
 
 DOMAIN = 'zhimi'
 

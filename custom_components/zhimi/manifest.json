@@ -1,0 +1,8 @@
+{
+	"domain": "zhimi",
+	"name": "XiaoMi Cloud Service",
+	"documentation": "https://github.com/Yonsm/ZhiMi",
+	"requirements": ["miservice>=2021.3.1"],
+	"dependencies": [],
+	"codeowners": ["@Yonsm"]
+}
