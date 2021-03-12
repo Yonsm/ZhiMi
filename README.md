@@ -12,14 +12,14 @@ _依赖 [MiService](https://github.com/Yonsm/MiService)，运行时自动检查�
 
 参见 [我的 Home Assistant 配置](https://github.com/Yonsm/.homeassistant) 中 [configuration.yaml](https://github.com/Yonsm/.homeassistant/blob/main/configuration.yaml)
 
-```
+```yaml
 zhimi:
-    username: !secret zhimi_username
-    password: !secret zhimi_password
+  username: !secret zhimi_username
+  password: !secret zhimi_password
 ```
 
--   `必选` `username` 小米账号
--   `必选` `password` 小米密码
+- `必选` `username` 小米账号
+- `必选` `password` 小米密码
 
 登录后会在 `.storage` 下记录 `zhimi` 的 token 文件，删除后会自动重新登录。
 
@@ -31,6 +31,6 @@ zhimi:
 
 ## 4. 参考
 
--   [ZhiMsg](https://github.com/Yonsm/ZhiMsg)
--   [Yonsm.NET](https://yonsm.github.io)
--   [Yonsm's .homeassistant](https://github.com/Yonsm/.homeassistant)
+- [ZhiMsg](https://github.com/Yonsm/ZhiMsg)
+- [Yonsm.NET](https://yonsm.github.io)
+- [Yonsm's .homeassistant](https://github.com/Yonsm/.homeassistant)
