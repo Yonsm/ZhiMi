@@ -3,7 +3,7 @@
 	"name": "Zhi XiaoMi Cloud Service",
 	"documentation": "https://github.com/Yonsm/ZhiMi",
 	"version": "1.0.1",
-	"requirements": ["miservice>=2021.3.18"],
+	"requirements": ["miservice>=2021.3.22"],
 	"dependencies": [],
 	"codeowners": ["@Yonsm"]
 }
