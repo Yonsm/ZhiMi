@@ -11,15 +11,79 @@ ZHI_MIOT_SCHEMA = ZHI_SCHEMA | {vol.Required(CONF_DID): cv.string}
 
 
 class ZhiMIoTEntity(ZhiPollEntity):
+    # 所有 piid 不重复时，使用 ZhiMIoTEntity，self.data 为一级 dict
 
     def __init__(self, props, conf, icon=None):
         super().__init__(conf, icon)
         self.did = conf[CONF_DID]
         self.props = props
 
+    @property
+    def device_state_attributes(self):
+        return {d: self.get_prop(p, s) for s, v in self.props.items() if isinstance(v, dict) for p, d in v.items() if d}
+
     async def async_poll(self):
         props = [(s, p) for s, v in self.props.items() for p in v]
         values = await miio_service.miot_get_props(self.did, props)
+        return self.make_data(props, values)
+
+    async def async_control(self, siid, iid, value=[], op=None, success=None):
+        has_prop = not isinstance(value, list) and self.has_prop(iid, siid)
+        if has_prop:
+            old_value = self.get_prop(iid, siid)
+            if value is None:
+                value = old_value
+            elif value == old_value:
+                op and await self.async_update_status('当前已' + op)
+                return None
+        op and await self.async_update_status('正在' + op)
+        code = await self.mi_control(siid, iid, value)
+        if code == 0:
+            self.skip_poll = True
+            if has_prop:
+                self.set_prop(value, iid, siid)
+            if success:
+                success(siid, iid, value)
+            if op:
+                await self.async_update_status(op + '成功')
+            else:
+                await self.async_update_ha_state()
+            return True
+        op and await self.async_update_status(op + '错误：%s' % code)
+        return False
+
+    async def async_update_status(self, status):
+        raise NotImplementedError
+
+    async def mi_control(self, siid, iid, value=[]):
+        return await miio_service.miot_control(self.did, siid, iid, value)
+
+    def has_prop(self, piid, _=None):
+        return piid in self.data
+
+    def get_prop(self, piid, _=None):
+        return self.data[piid]
+
+    def set_prop(self, value, piid, _=None):
+        self.data[piid] = value
+
+    def make_data(self, props, values):
+        return {props[i][1]: values[i] for i in range(len(values))}
+
+
+class ZhiMIoTEntity2(ZhiPollEntity):
+    # 不同的服务中的 piid 有重复时，使用 ZhiMIoTEntity2，self.data 为二级 dict
+
+    def has_prop(self, piid, siid):
+        return siid in self.data and piid in self.data[siid]
+
+    def get_prop(self, piid, siid):
+        return self.data[siid][piid]
+
+    def set_prop(self, value, piid, siid):
+        self.data[siid][piid] = value
+
+    def make_data(self, props, values):
         data = {}
         for i in range(len(values)):
             p = props[i]
@@ -27,35 +91,3 @@ class ZhiMIoTEntity(ZhiPollEntity):
                 data[p[0]] = {}
             data[p[0]][p[1]] = values[i]
         return data
-
-    @property
-    def device_state_attributes(self):
-        return {d: self.data[s][p] for s, v in self.props.items() if isinstance(v, dict) for p, d in v.items() if d}
-
-    async def async_update_status(self, status):
-        raise NotImplementedError
-
-    async def mi_control(self, siid, piid, value=[]):
-        return await miio_service.miot_control(self.did, siid, piid, value)
-
-    async def async_control(self, siid, piid, value=[], doing=None):
-        has_piid = piid > 0 and self.props and siid in self.data and piid in self.data[siid]
-        if has_piid:
-            if value is None:
-                value = self.data[siid][piid]
-            elif value == self.data[siid][piid]:
-                doing and await self.async_update_status('当前已' + doing)
-                return None
-        doing and await self.async_update_status('正在' + doing)
-        code = await self.mi_control(siid, piid, value)
-        if code == 0:
-            if has_piid:
-                self.skip_poll = True
-                self.data[siid][piid] = value
-            if doing:
-                await self.async_update_status(doing + '成功')
-            elif has_piid:
-                await self.async_update_ha_state()
-            return True
-        doing and await self.async_update_status(doing + '错误：%s' % code)
-        return False
