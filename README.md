@@ -6,6 +6,7 @@ XiaoMi Cloud Service for HomeAssistant
 
 把 `zhimi` 放入 `custom_components`；也支持在 [HACS](https://hacs.xyz/) 中添加自定义库的方式安装。
 
+_部分组件依赖 [Zhi](https://github.com/Yonsm/Zhi)，请一并安装。_
 _依赖 [MiService](https://github.com/Yonsm/MiService)，运行时自动检查安装。_
 
 ## 2. 配置方法
