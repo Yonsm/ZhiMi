@@ -1,9 +1,12 @@
 
 from .entity import ZhiMIoTEntity, ZHI_MIOT_SCHEMA
 from homeassistant.components.light import LightEntity, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from math import ceil
+
+import logging
+_LOGGER = logging.getLogger(__name__)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(ZHI_MIOT_SCHEMA).extend({
     vol.Optional('siid', default=2): int,
@@ -21,14 +24,15 @@ class ZhiMiLight(ZhiMIoTEntity, LightEntity):
     def __init__(self, conf):
         siid = conf['siid']
         piid = conf['piid']
-        piid_brightness = conf.get('piid_brightness')
         props = [piid]
+        piid_brightness = conf.get('piid_brightness')
         if piid_brightness is not None:
             props.append(piid_brightness)
         super().__init__({siid: props}, conf)
         self.siid = siid
         self.piid = piid
         self.piid_brightness = piid_brightness
+        _LOGGER.debug("ZhiMiLight: siid=%s, piid=%s", siid, piid)
 
     @property
     def supported_features(self):

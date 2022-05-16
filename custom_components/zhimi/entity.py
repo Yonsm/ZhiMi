@@ -4,6 +4,9 @@ from ..zhi.entity import ZhiPollEntity, ZHI_SCHEMA
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
+import logging
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.debug("miio_service: %s", miio_service.server)
 
 CONF_DID = 'did'
 CONF_MODEL = 'model'
@@ -72,6 +75,8 @@ class ZhiMIoTEntity(ZhiPollEntity):
         return {props[i][1]: values[i] for i in range(len(values))}
 
 # TODO: Not Worked!
+
+
 class ZhiMIoTEntity2(ZhiMIoTEntity):
     # 多个服务中 piid 有重复时，使用 ZhiMIoTEntity2，self.data 为二级 dict
 
@@ -94,6 +99,8 @@ class ZhiMIoTEntity2(ZhiMIoTEntity):
         return data
 
 # TODO: Not Worked!
+
+
 class ZhiMIoTEntity3(ZhiPollEntity):
     # 所有 piid 不重复时，使用 ZhiMIoTEntity，self.data 为一级 dict
 
