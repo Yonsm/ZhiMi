@@ -8,6 +8,8 @@ miio_service = None
 
 _LOGGER = logging.getLogger(__name__)
 
+_LOGGER.debug("__init__ miio_service: %s", miio_service)
+
 
 async def async_setup(hass, config):
     conf = config.get(DOMAIN)

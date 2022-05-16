@@ -22,17 +22,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ZhiMiLight(ZhiMIoTEntity, LightEntity):
 
     def __init__(self, conf):
-        siid = conf['siid']
-        piid = conf['piid']
-        props = [piid]
-        piid_brightness = conf.get('piid_brightness')
-        if piid_brightness is not None:
-            props.append(piid_brightness)
-        super().__init__({siid: props}, conf)
-        self.siid = siid
-        self.piid = piid
-        self.piid_brightness = piid_brightness
-        _LOGGER.debug("ZhiMiLight: siid=%s, piid=%s", siid, piid)
+        self.siid = conf['siid']
+        self.piid = conf['piid']
+        self.piid_brightness = conf.get('piid_brightness')
+        props = [self.piid]
+        if self.piid_brightness is not None:
+            props.append(self.piid_brightness)
+        super().__init__({self.siid: props}, conf)
+        _LOGGER.debug("ZhiMiLight: siid=%s, piid=%s", self.siid, self.piid)
 
     @property
     def supported_features(self):
