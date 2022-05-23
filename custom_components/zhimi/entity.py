@@ -6,7 +6,6 @@ import voluptuous as vol
 
 import logging
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.debug("miio_service: %s", miio_service.server)
 
 CONF_DID = 'did'
 CONF_MODEL = 'model'
@@ -160,7 +159,7 @@ class ZhiMIoTEntity3(ZhiPollEntity):
                 value = old_value
             elif value == old_value:
                 op and await self.async_update_status('当前已' + op)
-                return None
+                #return None
         op and await self.async_update_status('正在' + op)
         code = await self.mi_control(self.spec[srv]['iid'], abs(self.spec[srv][key]), value)
         if code == 0:
@@ -178,7 +177,8 @@ class ZhiMIoTEntity3(ZhiPollEntity):
         return False
 
     async def async_update_status(self, status):
-        raise NotImplementedError
+        _LOGGER.debug("async_update_status: %s", status)
+        #raise NotImplementedError
 
     async def mi_control(self, siid, iid, value=[]):
         return await miio_service.miot_control(self.did, siid, iid, value)

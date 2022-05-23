@@ -1,0 +1,9 @@
+{
+	"domain": "zhimijia",
+	"name": "Zhi MiJia General Device",
+	"documentation": "https://github.com/Yonsm/ZhiMiJia",
+	"version": "1.0.1",
+	"requirements": ["miservice>=2021.3.24"],
+	"dependencies": ["zhimi"],
+	"codeowners": ["@Yonsm"]
+}

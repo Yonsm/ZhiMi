@@ -1,6 +1,6 @@
 # TODO: Not worked!
-from . import miio_service
-from .entity import ZhiMIoTEntity, CONF_DID, ZHI_MIOT_SCHEMA
+from ..zhimi import miio_service
+from ..zhimi.entity import ZhiMIoTEntity, CONF_DID, ZHI_MIOT_SCHEMA
 from homeassistant.components.fan import FanEntity, PLATFORM_SCHEMA, SPEED_OFF, DIRECTION_REVERSE, DIRECTION_FORWARD, SUPPORT_PRESET_MODE, SUPPORT_PRESET_MODE, SUPPORT_DIRECTION, SUPPORT_OSCILLATE
 from homeassistant.const import STATE_HOME, STATE_OFF, STATE_ON
 
@@ -15,7 +15,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ZhiMiFan(ZhiMIoTEntity, FanEntity):
 
     def __init__(self, conf):
-        super().__init__(conf)
+        super().__init__({}, conf)
 
         self._speed = SPEED_OFF
         self._last_speed = None
