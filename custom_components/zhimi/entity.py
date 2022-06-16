@@ -9,8 +9,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DID = 'did'
 CONF_MODEL = 'model'
+CONF_IGNORE_STATE = 'ignore_state'
 
-ZHI_MIOT_SCHEMA = ZHI_SCHEMA | {vol.Required(CONF_DID): cv.string}
+ZHI_MIOT_SCHEMA = ZHI_SCHEMA | {vol.Required(CONF_DID): cv.string, vol.Optional(CONF_IGNORE_STATE): bool}
 
 
 class ZhiMIoTEntity(ZhiPollEntity):
@@ -19,6 +20,7 @@ class ZhiMIoTEntity(ZhiPollEntity):
     def __init__(self, props, conf, icon=None):
         super().__init__(conf, icon)
         self.did = conf[CONF_DID]
+        self.ignore_state = conf.get(CONF_IGNORE_STATE, False)
         self.props = props
 
     @property
@@ -36,7 +38,7 @@ class ZhiMIoTEntity(ZhiPollEntity):
             old_value = self.get_prop(iid, siid)
             if value is None:
                 value = old_value
-            elif value == old_value:
+            elif not self.ignore_state and value == old_value:
                 op and await self.async_update_status('当前已' + op)
                 return None
         op and await self.async_update_status('正在' + op)
@@ -56,7 +58,8 @@ class ZhiMIoTEntity(ZhiPollEntity):
         return False
 
     async def async_update_status(self, status):
-        raise NotImplementedError
+        _LOGGER.debug("async_update_status: %s", status)
+        #raise NotImplementedError
 
     async def mi_control(self, siid, iid, value=[]):
         return await miio_service.miot_control(self.did, siid, iid, value)
@@ -96,89 +99,3 @@ class ZhiMIoTEntity2(ZhiMIoTEntity):
                 data[p[0]] = {}
             data[p[0]][p[1]] = values[i]
         return data
-
-# TODO: Not Worked!
-
-
-class ZhiMIoTEntity3(ZhiPollEntity):
-    # 所有 piid 不重复时，使用 ZhiMIoTEntity，self.data 为一级 dict
-
-    def __init__(self, spec, conf, icon=None):
-        super().__init__(conf, icon)
-        self.did = conf[CONF_DID]
-        self.model = conf.get(CONF_MODEL)
-        if self.model is None:
-            self.spec = spec
-
-    @property
-    def device_state_attributes(self):
-        return self.data
-
-    async def load_spec(self, model):
-        import json
-        from os import path
-        spec_path = path.join(path.dirname(path.abspath(__file__)), model + '.json')
-        if path.exists(spec_path):
-            try:
-                with open(spec_path) as f:
-                    spec = json.load(f)
-            except Exception as e:
-                spec = None
-        else:
-            spec = None
-        if not spec:
-            spec = self.filter_spec(await miio_service.miot_spec_for_model(model, 'lite'))
-            with open(spec_path, 'w') as f:
-                f.write(spec)
-        return spec
-
-    async def filter_spec(self, spec):
-        return spec
-
-    async def async_poll(self):
-        if self.model is not None:
-            self.spec = await self.load_spec(self.model)
-            self.model = None
-
-        props = [(v['iid'], p, d) for s, v in self.spec.items() for d, p in v.items() if d != 'iid' and not d.startswith('@') and p >= 0]
-        if not props:
-            return {}
-        values = await miio_service.miot_get_props(self.did, props)
-        return {props[i][2]: values[i] for i in range(len(values))}
-
-    async def async_control(self, srv, key, value=[], op=None, success=None):
-        if isinstance(value, list):
-            key = '@' + key
-            has_prop = False
-        else:
-            key = key + '='
-            has_prop = key in self.data
-        if has_prop:
-            old_value = self.data[key]
-            if value is None:
-                value = old_value
-            elif value == old_value:
-                op and await self.async_update_status('当前已' + op)
-                #return None
-        op and await self.async_update_status('正在' + op)
-        code = await self.mi_control(self.spec[srv]['iid'], abs(self.spec[srv][key]), value)
-        if code == 0:
-            self.skip_poll = True
-            if has_prop:
-                self.data[key] = value
-            if success:
-                success(srv, key, value)
-            if op:
-                await self.async_update_status(op + '成功')
-            else:
-                await self.async_update_ha_state()
-            return True
-        op and await self.async_update_status(op + '错误：%s' % code)
-        return False
-
-    async def async_update_status(self, status):
-        _LOGGER.debug("async_update_status: %s", status)
-        #raise NotImplementedError
-
-    async def mi_control(self, siid, iid, value=[]):
-        return await miio_service.miot_control(self.did, siid, iid, value)
