@@ -32,16 +32,22 @@ class ZhiMIoTEntity(ZhiPollEntity):
         values = await miio_service.miot_get_props(self.did, props)
         return self.make_data(props, values)
 
-    async def async_control(self, siid, iid, value=[], op=None, success=None):
-        has_prop = not isinstance(value, list) and self.has_prop(iid, siid)
-        if has_prop:
-            old_value = self.get_prop(iid, siid)
-            if value is None:
-                value = old_value
-            elif not self.ignore_state and value == old_value:
-                op and await self.async_update_status('当前已' + op)
+    async def async_control(self, siid, iid, value=[], op=None, success=None, ignore_prop=False):
+        self.skip_poll = True
+        has_prop = not ignore_prop and not isinstance(value, list) and self.has_prop(iid, siid)
+        if value is None:
+            if has_prop:
+                value =  self.get_prop(iid, siid)
+            else:
+                _LOGGER.error("No old value for %s/%s", siid, iid)
+                op and await self.async_update_status(op + '异常')
                 return None
-        op and await self.async_update_status('正在' + op)
+        elif not self.ignore_state and has_prop and value == self.get_prop(iid, siid):
+            _LOGGER.warn("Ignore same state value: %s", value)
+            op and await self.async_update_status('当前已' + op)
+            return None
+
+        #op and await self.async_update_status('正在' + op)
         code = await self.mi_control(siid, iid, value)
         if code == 0:
             self.skip_poll = True
