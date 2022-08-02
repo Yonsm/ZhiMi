@@ -23,8 +23,6 @@ Washer.IIDS = {
     'speed_level': Washer.Speed_Level,
 }
 
-Washer_Status_Names = ZhiMiEntity.member_names(Washer_Status)
-Washer_Mode_Names = ZhiMiEntity.member_names(Washer_Mode)
 
 class ZhiMiVacuum(ZhiMiEntity, VacuumEntity):
 
@@ -33,17 +31,17 @@ class ZhiMiVacuum(ZhiMiEntity, VacuumEntity):
 
     async def async_poll(self):
         data = await super().async_poll()
-        self._status = Washer_Status_Names[data[Washer.Status]]
-        if data[Washer.Status] == Washer_Status.Paused:
+        self._status = Washer_Status(data[Washer.Status]).name
+        if data[Washer.Status] == Washer_Status.暂停:
             self._status += '｜暂停'
-        if data[Washer.Status] != Washer_Status.Off:
+        if data[Washer.Status] != Washer_Status.关机:
             left_time = data[Washer.Left_Time]
             if left_time:
                 self._status += '｜剩%s分钟' % left_time
             drying_time = data[Washer.Drying_Time]
             if drying_time:
                 self._status += '|' + Washer_Drying_Time(drying_time).name
-            appoint_time = data[Washer.预约完成时间]
+            appoint_time = data[自定义属性.预约完成时间戳]
             if appoint_time:
                 self._status += '｜预约%s' % datetime.fromtimestamp(appoint_time).strftime('%H:%M')
         return data
@@ -62,13 +60,13 @@ class ZhiMiVacuum(ZhiMiEntity, VacuumEntity):
 
     @property
     def is_on(self):
-        return self.data[Washer.Status] != Washer_Status.Off
+        return self.data[Washer.Status] != Washer_Status.关机
 
     async def async_turn_on(self, **kwargs):
         if self.data[Washer.Status] == Washer_Status.Idle:
             await self.async_update_status('已是待机状态')
         else:
-            if self.data[Washer.Status] != Washer_Status.Off:
+            if self.data[Washer.Status] != Washer_Status.关机:
                 await self.async_turn_off()
                 await sleep(1)
 
@@ -78,23 +76,22 @@ class ZhiMiVacuum(ZhiMiEntity, VacuumEntity):
 
     async def async_turn_off(self, **kwargs):
         def success(siid, iid, value):
-            self.data[Washer.Status] = Washer_Status.Off
+            self.data[Washer.Status] = Washer_Status.关机
         await self.async_control(Washer.Switch_Status, False, '关机', success, True)
 
     @property
     def fan_speed(self):
-        return [self.data[Washer.Mode]]
-        return Washer.Mode(self.data[Washer.Mode]).name
+        return Washer_Mode(self.data[Washer.Mode]).name
 
     @property
     def fan_speed_list(self):
-        return [k for k in vars(Washer_Mode).keys() if not k.startswith('__')]
+        return [e.name for e in Washer_Mode]
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         await self.async_control(Washer.Mode, self.fan_speed_list.index(fan_speed) + 1, '设定' + fan_speed + '模式')
 
     async def async_start(self):
-        if self.data[Washer.Status] == Washer_Status.Busy:
+        if self.data[Washer.Status] == Washer_Status.繁忙:
             lock = not self.data[Physical_Control_Locked.Physical_Control_Locked]
             return await self.async_control(Physical_Control_Locked.Physical_Control_Locked, lock, '锁定' if lock else '解锁')
         if not self.is_on:
@@ -103,13 +100,13 @@ class ZhiMiVacuum(ZhiMiEntity, VacuumEntity):
         await self.async_action(Washer.Start_Wash, '启动')
 
     async def async_pause(self):
-        if self.data[Washer.Status] == Washer_Status.Busy:
+        if self.data[Washer.Status] == Washer_Status.繁忙:
             await self.async_action(Washer.Pause, '暂停')
         else:
             await self.async_update_status('非工作状态，无法暂停')
 
     async def async_stop(self, **kwargs):
-        if self.data[Washer.Status] == Washer_Status.Off:
+        if self.data[Washer.Status] == Washer_Status.关机:
             await self.async_update_status('已经是关机状态')
         else:
             await self.async_turn_off()
@@ -146,7 +143,7 @@ class ZhiMiVacuum(ZhiMiEntity, VacuumEntity):
         await self.async_control(aiid, [self.data[Washer.Mode]], op, self.action_success)
 
     def action_success(self, siid, aiid, value):
-        self.data[Washer.Status] = (Washer_Status.Busy, Washer_Status.Paused)[aiid == Washer.Start_Wash]
+        self.data[Washer.Status] = (Washer_Status.繁忙, Washer_Status.暂停)[aiid == Washer.Start_Wash]
 
     async def async_clean_spot(self, **kwargs):
         if not self.is_on:
