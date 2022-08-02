@@ -35,7 +35,7 @@ class Physical_Control_Locked:
     Physical_Control_Locked = (3, 1)  # bool  # rwn
 
 
-class 自定义属性:
+class Custom:
     # 洗涤剂是否投放 = (4, 1)  # bool  # rnw
     # 洗涤剂投放量 = (4, 2)  # uint8  # rnw
     # 洗涤剂消耗量 = (4, 3)  # （ml）  # uint8  # rn
@@ -45,7 +45,7 @@ class 自定义属性:
     # 消毒剂 = (4, 7)  # bool  # rnw
     # 消毒剂投放量 = (4, 8)  # 【暂无】  # uint8  # rnw
     # 消毒剂消耗量 = (4, 9)  # （ml）【暂无】  # uint8  # rn
-    预约完成时间戳 = (4, 10)  # 1. 下行非0表示开始预约；2. 下行0表示取消预约  # uint32  # rnw
+    Appoint_Time = (4, 10)  # 1. 下行非0表示开始预约；2. 下行0表示取消预约  # uint32  # rnw
     # 模式 = [4, 11]  # --值参考标准  # uint8
     # 耗电量 = [4, 12]  # (千瓦时)--值参考标准  # uint16
     # 耗水量 = [4, 13]  # (升)--值参考标准  # uint8
@@ -292,5 +292,5 @@ class 用户按键上报_按键时长(Enum):
     MAX = 65535
 
 
-ALL_SVCS = (Device_Information, Washer, Physical_Control_Locked, 自定义属性)
+ALL_SVCS = (Device_Information, Washer, Physical_Control_Locked, Custom)
 

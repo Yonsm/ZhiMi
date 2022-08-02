@@ -41,7 +41,7 @@ class ZhiMiVacuum(ZhiMiEntity, VacuumEntity):
             drying_time = data[Washer.Drying_Time]
             if drying_time:
                 self._status += '|' + Washer_Drying_Time(drying_time).name
-            appoint_time = data[自定义属性.预约完成时间戳]
+            appoint_time = data[Custom.Appoint_Time]
             if appoint_time:
                 self._status += '｜预约%s' % datetime.fromtimestamp(appoint_time).strftime('%H:%M')
         return data
@@ -129,7 +129,7 @@ class ZhiMiVacuum(ZhiMiEntity, VacuumEntity):
                 await (async_func(value) if count > 1 else async_func())
             elif count > 1 and cmd in Washer.IIDS:
                 prop = Washer.IIDS[cmd]
-                code = await self.async_control(prop, value, '设定' + ALL_PROPS[prop])
+                code = await self.async_control(prop, value, '设定' + self.props[prop])
                 if code is None:
                     continue
                 elif code == False:
@@ -171,4 +171,4 @@ class ZhiMiVacuum(ZhiMiEntity, VacuumEntity):
         else:
             status = '预约%s小时后完成洗衣' % atime
             stamp = now.timestamp() + atime * 60 * 60 * 1000
-        await (self.async_control(自定义属性.预约完成时间戳, int(stamp), status) if atime else self.async_start())
+        await (self.async_control(Custom.Appoint_Time, int(stamp), status) if atime else self.async_start())
