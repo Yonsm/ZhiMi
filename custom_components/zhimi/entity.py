@@ -31,7 +31,7 @@ class ZhiMiEntity(ZhiPollEntity):
         return {d: self.data[p] for p, d in self.props.items() if d} if isinstance(self.props, dict) else None
 
     async def async_poll(self):
-        props = self.props.keys() if isinstance(self.props, dict) else self.props
+        props = list(self.props.keys()) if isinstance(self.props, dict) else self.props
         get_props = miio_service.home_get_props if isinstance(props[0], str) else miio_service.miot_get_props
         values = await get_props(self.did, props)
         return {props[i]: values[i] for i in range(len(values))}
