@@ -4,7 +4,7 @@ import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
 from math import ceil
-from ..zhimi.entity import ZhiMIoTEntity, ZHI_MIOT_SCHEMA
+from ..zhimi.entity import ZhiMiEntity, ZHI_MIOT_SCHEMA
 
 import logging
 _LOGGER = logging.getLogger(__name__)
@@ -12,6 +12,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(ZHI_MIOT_SCHEMA | {
     vol.Optional('power_prop', default='power'): cv.string,
+    vol.Optional('power_on'): object,
+    vol.Optional('power_off'): object,
     vol.Optional('brightness_prop'): cv.string,
 })
 
@@ -20,11 +22,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([ZhiMiLight(config)], True)
 
 
-class ZhiMiLight(ZhiMIoTEntity, LightEntity):
+class ZhiMiLight(ZhiMiEntity, LightEntity):
 
     def __init__(self, conf):
         self.power_prop = conf['power_prop']
         self.brightness_prop = conf.get('brightness_prop')
+        self.power_on = conf.get('power_on', True if '-' in self.power_prop else 'on')
+        self.power_off = conf.get('power_off', False if '-' in self.power_prop else 'off')
         props = [self.power_prop]
         if self.brightness_prop is not None:
             props.append(self.brightness_prop)
@@ -42,8 +46,7 @@ class ZhiMiLight(ZhiMIoTEntity, LightEntity):
 
     @property
     def is_on(self):
-        power = self.data[self.power_prop]
-        return power if '-' in self.power_prop else power == 'on'
+        return self.data[self.power_prop] == self.power_on
 
     async def async_turn_on(self, **kwargs):
         if ATTR_BRIGHTNESS in kwargs and self.brightness_prop is not None:
@@ -52,7 +55,7 @@ class ZhiMiLight(ZhiMIoTEntity, LightEntity):
             if await self.async_control(self.brightness_prop, percent_brightness):
                 self.data[self.brightness_prop] = percent_brightness
         else:
-            await self.async_control(self.power_prop, True if '-' in self.power_prop else 'on')
+            await self.async_control(self.power_prop, self.power_on)
 
     async def async_turn_off(self, **kwargs):
-        await self.async_control(self.power_prop, False if '-' in self.power_prop else 'off')
+        await self.async_control(self.power_prop, self.power_off)
