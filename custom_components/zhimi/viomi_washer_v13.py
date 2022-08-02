@@ -5,7 +5,7 @@ from enum import Enum
 
 
 class Device_Information:
-    Device_Manufacturer = (1, 1)
+    #Device_Manufacturer = (1, 1)
     Device_Model = (1, 2)
     Device_Serial_Number = (1, 3)
     Current_Firmware_Version = (1, 4)
@@ -36,29 +36,29 @@ class Physical_Control_Locked:
 
 
 class 自定义属性:
-    洗涤剂是否投放 = (4, 1)  # bool  # rnw
-    洗涤剂投放量 = (4, 2)  # uint8  # rnw
-    洗涤剂消耗量 = (4, 3)  # （ml）  # uint8  # rn
-    柔顺剂是否投放 = (4, 4)  # 【暂无】  # bool  # rnw
-    柔顺剂投放量 = (4, 5)  # 【暂无】  # uint8  # rnw
-    柔顺剂消耗量 = (4, 6)  # （ml）【暂无】  # uint8  # rn
-    disinfectant = (4, 7)  # bool  # rnw
-    消毒剂投放量 = (4, 8)  # 【暂无】  # uint8  # rnw
-    消毒剂消耗量 = (4, 9)  # （ml）【暂无】  # uint8  # rn
+    # 洗涤剂是否投放 = (4, 1)  # bool  # rnw
+    # 洗涤剂投放量 = (4, 2)  # uint8  # rnw
+    # 洗涤剂消耗量 = (4, 3)  # （ml）  # uint8  # rn
+    # 柔顺剂是否投放 = (4, 4)  # 【暂无】  # bool  # rnw
+    # 柔顺剂投放量 = (4, 5)  # 【暂无】  # uint8  # rnw
+    # 柔顺剂消耗量 = (4, 6)  # （ml）【暂无】  # uint8  # rn
+    # 消毒剂 = (4, 7)  # bool  # rnw
+    # 消毒剂投放量 = (4, 8)  # 【暂无】  # uint8  # rnw
+    # 消毒剂消耗量 = (4, 9)  # （ml）【暂无】  # uint8  # rn
     预约完成时间戳 = (4, 10)  # 1. 下行非0表示开始预约；2. 下行0表示取消预约  # uint32  # rnw
-    模式 = [4, 11]  # --值参考标准  # uint8
-    耗电量 = [4, 12]  # (千瓦时)--值参考标准  # uint16
-    耗水量 = [4, 13]  # (升)--值参考标准  # uint8
-    工作时长 = [4, 14]  # --值参考标准  # uint16
-    洗涤剂将耗尽 = (4, 15)  # bool  # rn
-    柔顺剂将耗尽 = (4, 16)  # 【暂无】  # bool  # rn
-    消毒剂将耗尽 = (4, 17)  # 【暂无】  # bool  # rn
+    # 模式 = [4, 11]  # --值参考标准  # uint8
+    # 耗电量 = [4, 12]  # (千瓦时)--值参考标准  # uint16
+    # 耗水量 = [4, 13]  # (升)--值参考标准  # uint8
+    # 工作时长 = [4, 14]  # --值参考标准  # uint16
+    # 洗涤剂将耗尽 = (4, 15)  # bool  # rn
+    # 柔顺剂将耗尽 = (4, 16)  # 【暂无】  # bool  # rn
+    # 消毒剂将耗尽 = (4, 17)  # 【暂无】  # bool  # rn
 
 
-class 用户按键上报:
-    按键属性 = (5, 1)  # rn
-    按键值 = (5, 2)  # uint8  # rn
-    按键时长 = (5, 3)  # (毫秒)  # uint16  # rn
+# class 用户按键上报:
+#     按键属性 = (5, 1)  # rn
+#     按键值 = (5, 2)  # uint8  # rn
+#     按键时长 = (5, 3)  # (毫秒)  # uint16  # rn
 
 
 class Washer_Status(Enum):
@@ -292,5 +292,5 @@ class 用户按键上报_按键时长(Enum):
     MAX = 65535
 
 
-ALL_SVCS = (Device_Information, Washer, Physical_Control_Locked, 自定义属性, 用户按键上报)
+ALL_SVCS = (Device_Information, Washer, Physical_Control_Locked, 自定义属性)
 
