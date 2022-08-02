@@ -18,24 +18,22 @@ ZHI_MIOT_SCHEMA = ZHI_SCHEMA | {
 }
 
 
-class ZhiMIoTEntity(ZhiPollEntity):
+class ZhiMiEntity(ZhiPollEntity):
 
     def __init__(self, props, conf, icon=None):
         super().__init__(conf, icon)
         self.did = conf[CONF_DID]
-        self.ignore_state = conf.get(CONF_IGNORE_STATE, False)
-        self.props = props  # {siid-piid｜prop: desc} | [siid-piid｜prop]
+        self.ignore_state = conf.get(CONF_IGNORE_STATE)
+        self.props = {v: k for svc in props for k, v in vars(svc).items() if not k.startswith('__') and isinstance(v, tuple)} if isinstance(props, tuple) else props
 
     @property
     def device_state_attributes(self):
         return {d: self.data[p] for p, d in self.props.items() if d} if isinstance(self.props, dict) else None
 
     async def async_poll(self):
-        props = list(self.props.keys()) if isinstance(self.props, dict) else self.props
-        if '-' in props[0]:
-            values = await miio_service.miot_get_props(self.did, [tuple(map(int, p.split('-'))) for p in props])
-        else:
-            values = await miio_service.home_get_props(self.did, props)
+        props = self.props.keys() if isinstance(self.props, dict) else self.props
+        get_props = miio_service.home_get_props if isinstance(props[0], str) else miio_service.miot_get_props
+        values = await get_props(self.did, props)
         return {props[i]: values[i] for i in range(len(values))}
 
     async def async_control(self, prop, value=[], op=None, success=None, ignore_prop=False):
@@ -53,12 +51,8 @@ class ZhiMIoTEntity(ZhiPollEntity):
             return None
 
         # op and await self.async_update_status('正在' + op)
-        if '-' in prop:
-            iids = prop.split('-')
-            control = miio_service.miot_action if isinstance(value, list) else miio_service.miot_set_prop
-            code = await control(self.did, int(iids[0]), int(iids[1]), value)
-        else:
-            code = await miio_service.home_set_prop(self.did, prop, value)
+        control = miio_service.home_set_prop if isinstance(prop, str) else (miio_service.miot_action if isinstance(value, list) else miio_service.miot_set_prop)
+        code = await control(self.did, prop, value)
 
         if code == 0:
             self.skip_poll = True
