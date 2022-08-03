@@ -32,9 +32,15 @@ class ZhiMiEntity(ZhiPollEntity):
 
     async def async_poll(self):
         props = list(self.props.keys()) if isinstance(self.props, dict) else self.props
-        get_props = miio_service.home_get_props if isinstance(props[0], str) else miio_service.miot_get_props
+        prop = props[0]
+        if isinstance(prop, str) and not prop[0].isdigit():
+            get_props = miio_service.home_get_props
+        else:
+            if isinstance(prop, str):
+                props = list(map(lambda s: tuple(map(int, s.split('-'))), props))
+            get_props = miio_service.miot_get_props
         values = await get_props(self.did, props)
-        return {props[i]: values[i] for i in range(len(values))}
+        return {self.props[i]: values[i] for i in range(len(values))}
 
     async def async_control(self, prop, value=[], op=None, success=None, ignore_prop=False):
         has_prop = not ignore_prop and not isinstance(value, list) and prop in self.data
@@ -51,15 +57,21 @@ class ZhiMiEntity(ZhiPollEntity):
             return None
 
         # op and await self.async_update_status('正在' + op)
-        control = miio_service.home_set_prop if isinstance(prop, str) else (miio_service.miot_action if isinstance(value, list) else miio_service.miot_set_prop)
+        key = prop
+        if isinstance(prop, str) and not prop[0].isdigit():
+            control = miio_service.home_set_prop
+        else:
+            control = (miio_service.miot_action if isinstance(value, list) else miio_service.miot_set_prop)
+            if isinstance(prop, str):
+                prop = tuple(map(int, prop.split('-')))
         code = await control(self.did, prop, value)
 
         if code == 0:
             self.skip_poll = True
             if has_prop:
-                self.data[prop] = value
+                self.data[key] = value
             if success:
-                success(prop, value)
+                success(key, value)
             if op:
                 await self.async_update_status(op + '成功')
             else:
