@@ -35,7 +35,7 @@ class ZhiMiEntity(ZhiPollEntity):
 
     @property
     def device_state_attributes(self):
-        return {self.attrs[i]: self.data[self.props[i]] for i in range(len(self.attrs))} if self.attrs else None
+        return {self.attrs[i] if self.attrs else self.props[i]: self.data[self.props[i]] for i in range(len(self.props))} if self.data else None
 
     async def async_poll(self):
         props = self.props
