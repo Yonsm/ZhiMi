@@ -11,7 +11,7 @@ CONF_DID = 'did'
 CONF_MODEL = 'model'
 CONF_IGNORE_STATE = 'ignore_state'
 
-ZHI_MIOT_SCHEMA = ZHI_SCHEMA | {
+ZHIMI_SCHEMA = ZHI_SCHEMA | {
     vol.Required(CONF_DID): cv.string,
     vol.Optional(CONF_MODEL): cv.string,
     vol.Optional(CONF_IGNORE_STATE): bool
