@@ -50,7 +50,7 @@ class ZhiMiEntity(ZhiPollEntity):
         return {self.props[i]: values[i] for i in range(len(values))}
 
     async def async_control(self, prop, value=[], op=None, success=None, ignore_prop=False):
-        has_prop = not ignore_prop and not isinstance(value, list) and prop in self.data
+        has_prop = not ignore_prop and not isinstance(value, list) and self.data and prop in self.data
         if value is None:
             if has_prop:
                 value = self.data[prop]
