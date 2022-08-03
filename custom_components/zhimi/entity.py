@@ -24,14 +24,21 @@ class ZhiMiEntity(ZhiPollEntity):
         super().__init__(conf, icon)
         self.did = conf[CONF_DID]
         self.ignore_state = conf.get(CONF_IGNORE_STATE)
-        self.props = {v: k for svc in props for k, v in vars(svc).items() if not k.startswith('__') and isinstance(v, tuple)} if isinstance(props, tuple) else props
+        if isinstance(props, tuple):
+            props = {e.value: e.name for s in props for e in s if not e.name.startswith('_')}
+        if isinstance(props, dict):
+            self.attrs = tuple(props.values())
+            props = tuple(props.keys())
+        else:
+            self.attrs = None
+        self.props = props
 
     @property
     def device_state_attributes(self):
-        return {d: self.data[p] for p, d in self.props.items() if d} if isinstance(self.props, dict) else None
+        return {self.attrs[i]: self.data[self.props[i]] for i in range(len(self.attrs))} if self.attrs else None
 
     async def async_poll(self):
-        props = list(self.props.keys()) if isinstance(self.props, dict) else self.props
+        props = self.props
         prop = props[0]
         if isinstance(prop, str) and not prop[0].isdigit():
             get_props = miio_service.home_get_props
