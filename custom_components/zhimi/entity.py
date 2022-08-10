@@ -64,21 +64,14 @@ class ZhiMiEntity(ZhiPollEntity):
             return None
 
         # op and await self.async_update_status('正在' + op)
-        key = prop
-        if isinstance(prop, str) and not prop[0].isdigit():
-            control = miio_service.home_set_prop
-        else:
-            control = (miio_service.miot_action if isinstance(value, list) else miio_service.miot_set_prop)
-            if isinstance(prop, str):
-                prop = tuple(map(int, prop.split('-')))
-        code = await control(self.did, prop, value)
+        code = await self.async_action(prop, value)
 
         if code == 0:
             self.skip_poll = True
             if has_prop:
-                self.data[key] = value
+                self.data[prop] = value
             if success:
-                success(key, value)
+                success(prop, value)
             if op:
                 await self.async_update_status(op + '成功')
             else:
@@ -86,6 +79,15 @@ class ZhiMiEntity(ZhiPollEntity):
             return True
         op and await self.async_update_status(op + '错误：%s' % code)
         return False
+
+    async def async_action(self, prop, value=[]):
+        if isinstance(prop, str) and not prop[0].isdigit():
+            action = miio_service.home_set_prop
+        else:
+            action = (miio_service.miot_action if isinstance(value, list) else miio_service.miot_set_prop)
+            if isinstance(prop, str):
+                prop = tuple(map(int, prop.split('-')))
+        return await action(self.did, prop, value)
 
     async def async_update_status(self, status):
         _LOGGER.debug("async_update_status: %s", status)
