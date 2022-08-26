@@ -34,7 +34,7 @@ class ZhiMiEntity(ZhiPollEntity):
         self.props = props
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         return {self.attrs[i] if self.attrs else self.props[i]: self.data[self.props[i]] for i in range(len(self.props))} if self.data else None
 
     async def async_poll(self):
@@ -49,7 +49,7 @@ class ZhiMiEntity(ZhiPollEntity):
         values = await get_props(self.did, props)
         return {self.props[i]: values[i] for i in range(len(values))}
 
-    async def async_control(self, prop, value=[], op=None, success=None, ignore_prop=False):
+    async def async_control(self, prop, value=[], op=None, success=None, ignore_prop=False, alias_prop=None):
         has_prop = not ignore_prop and not isinstance(value, list) and self.data and prop in self.data
         if value is None:
             if has_prop:
@@ -64,7 +64,7 @@ class ZhiMiEntity(ZhiPollEntity):
             return None
 
         # op and await self.async_update_status('正在' + op)
-        code = await self.async_action(prop, value)
+        code = await self.async_action(alias_prop or prop, value)
 
         if code == 0:
             self.skip_poll = True
