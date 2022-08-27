@@ -1,6 +1,8 @@
 
-from . import miio_service
+from . import miio_service, DOMAIN
 from ..zhi.entity import ZhiPollEntity, ZHI_SCHEMA
+from homeassistant.helpers import discovery
+from homeassistant.const import CONF_SENSORS, CONF_MODEL, CONF_DEVICE
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
@@ -8,20 +10,21 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DID = 'did'
-CONF_MODEL = 'model'
 CONF_IGNORE_STATE = 'ignore_state'
 
 ZHIMI_SCHEMA = ZHI_SCHEMA | {
     vol.Required(CONF_DID): cv.string,
     vol.Optional(CONF_MODEL): cv.string,
-    vol.Optional(CONF_IGNORE_STATE): bool
+    vol.Optional(CONF_SENSORS): dict,
+    vol.Optional(CONF_IGNORE_STATE): bool,
 }
 
 
 class ZhiMiEntity(ZhiPollEntity):
 
-    def __init__(self, props, conf, icon=None):
+    def __init__(self, hass, props, conf, icon=None):
         super().__init__(conf, icon)
+        # self.hass = hass
         self.did = conf[CONF_DID]
         self.ignore_state = conf.get(CONF_IGNORE_STATE)
         if isinstance(props, tuple):
@@ -32,6 +35,16 @@ class ZhiMiEntity(ZhiPollEntity):
         else:
             self.attrs = None
         self.props = props
+
+        if CONF_SENSORS in conf:
+            discovery.load_platform(hass, 'sensor', DOMAIN, {CONF_SENSORS: conf[CONF_SENSORS], CONF_DEVICE: self}, {})
+
+    async def async_update(self):
+        await super().async_update()
+        if hasattr(self, 'sensors'):
+            for sensor in self.sensors:
+                sensor._attr_native_value = self.data.get(sensor.sensor_id) if self.data else None
+                await sensor.async_update_ha_state()
 
     @property
     def extra_state_attributes(self):
@@ -47,7 +60,7 @@ class ZhiMiEntity(ZhiPollEntity):
                 props = list(map(lambda s: tuple(map(int, s.split('-'))), props))
             get_props = miio_service.miot_get_props
         values = await get_props(self.did, props)
-        return {self.props[i]: values[i] for i in range(len(values))}
+        return {self.props[i]: values[i]/10 if props[i] == 'temp_dec' else values[i] for i in range(len(values))}
 
     async def async_control(self, prop, value=[], op=None, success=None, ignore_prop=False, alias_prop=None):
         has_prop = not ignore_prop and not isinstance(value, list) and self.data and prop in self.data
