@@ -2,7 +2,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_SENSORS, CONF_DEVICE
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, conf, async_add_entities, discovery_info=None):
     sensors = []
     for k, v in discovery_info[CONF_SENSORS].items():
         sensor = SensorEntity()
