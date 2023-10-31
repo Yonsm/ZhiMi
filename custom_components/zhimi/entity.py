@@ -44,7 +44,7 @@ class ZhiMiEntity(ZhiPollEntity):
         if hasattr(self, 'sensors'):
             for sensor in self.sensors:
                 sensor._attr_native_value = self.data.get(sensor.sensor_id) if self.data else None
-                await sensor.async_update_ha_state()
+                sensor.async_write_ha_state()
 
     @property
     def extra_state_attributes(self):
