@@ -88,7 +88,7 @@ class ZhiMiEntity(ZhiPollEntity):
             if op:
                 await self.async_update_status(op + '成功')
             else:
-                await self.async_update_ha_state()
+               self.async_write_ha_state()
             return True
         op and await self.async_update_status(op + '错误：%s' % code)
         return False
