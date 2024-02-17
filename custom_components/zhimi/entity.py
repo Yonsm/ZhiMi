@@ -104,4 +104,4 @@ class ZhiMiEntity(ZhiPollEntity):
 
     async def async_update_status(self, status):
         _LOGGER.debug("async_update_status: %s", status)
-        #raise NotImplementedError
+        self.async_write_ha_state()
