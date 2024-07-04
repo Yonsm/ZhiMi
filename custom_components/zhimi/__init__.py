@@ -1,14 +1,21 @@
 
+from miservice import MiAccount, MiIOService
+from homeassistant.helpers import aiohttp_client, storage
+
 DOMAIN = 'zhimi'
 
-mi_account = None
-miio_service = None
+miio_service = MiIOService()
+
+
+def load_account(conf, store, sesssion):
+    miio_service.account = MiAccount(sesssion, conf['username'], conf['password'], store)
 
 
 async def async_setup(hass, config):
+    global miio_service
     conf = config.get(DOMAIN)
-    global mi_account, miio_service
-    from miservice import MiAccount, MiIOService
-    mi_account = MiAccount(hass.helpers.aiohttp_client.async_get_clientsession(), conf['username'], conf['password'], hass.config.path(hass.helpers.storage.STORAGE_DIR, DOMAIN))
-    miio_service = MiIOService(mi_account, conf.get('region'))
+    store = hass.config.path(storage.STORAGE_DIR, DOMAIN)
+    sesssion = aiohttp_client.async_get_clientsession(hass)
+    #miio_service.account = MiAccount(sesssion, conf['username'], conf['password'], store)
+    await hass.async_add_executor_job(load_account, conf, store, sesssion)
     return True
